@@ -40,16 +40,24 @@ jobs:
           terraform_version: "1.7.0"
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -input=false
+      
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.terraform.d/plugin-cache
+            infra/terraform/.terraform
+          key: ${{ runner.os }}-terraform-${{ hashFiles('infra/terraform/*.tf*') }}-${{ env.AWS_REGION }}
 
       - name: Terraform Format & Validate
         run: |
-          terraform fmt -check
+          terraform fmt -recursive
           terraform validate
 
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
-        run: terraform plan -no-color
+        run: terraform plan -input=false -no-color -out=tfplan -refresh=false
 
       - name: Terraform Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
