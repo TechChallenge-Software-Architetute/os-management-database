@@ -24,7 +24,7 @@ resource "aws_security_group" "aurora_sg" {
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]  # ajuste conforme sua rede
+    cidr_blocks = ["10.0.0.0/16"] # ajuste conforme sua rede
   }
 
   egress {
@@ -40,16 +40,16 @@ resource "aws_security_group" "aurora_sg" {
 ############################################
 
 resource "aws_rds_cluster" "aurora" {
-  cluster_identifier      = "meu-aurora-mysql"
-  engine                  = "aurora-mysql"
-  engine_version          = "5.7.mysql_aurora.2.11.2"
+  cluster_identifier = "meu-aurora-mysql"
+  engine             = "aurora-mysql"
+  engine_version     = "5.7.mysql_aurora.2.11.2"
 
-  master_username         = var.db_username
-  master_password         = var.db_password
-  database_name           = "meubanco"
+  master_username = var.db_username
+  master_password = var.db_password
+  database_name   = "meubanco"
 
-  db_subnet_group_name    = aws_db_subnet_group.aurora_subnets.name
-  vpc_security_group_ids  = [aws_security_group.aurora_sg.id]
+  db_subnet_group_name   = aws_db_subnet_group.aurora_subnets.name
+  vpc_security_group_ids = [aws_security_group.aurora_sg.id]
 
   backup_retention_period = 7
   preferred_backup_window = "03:00-04:00"
