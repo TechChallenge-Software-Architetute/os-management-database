@@ -36,10 +36,13 @@ jobs:
 
       - name: Terraform validate (placeholders)
         run: |
-          terraform validate -var='vpc_id=placeholder' \
-                            -var='subnet_ids=["subnet-1","subnet-2"]' \
-                            -var='db_username=admin' \
-                            -var='db_password=placeholder'
+          cat > ci-placeholder.auto.tfvars <<EOF
+          vpc_id = "placeholder"
+          subnet_ids = ["subnet-1","subnet-2"]
+          db_username = "admin"
+          db_password = "placeholder"
+          EOF
+          terraform validate
 
   deploy:
     name: "Terraform Deploy (push → develop)"
