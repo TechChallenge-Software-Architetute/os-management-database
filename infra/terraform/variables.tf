@@ -20,3 +20,9 @@ variable "db_password" {
   description = "Senha master do Aurora"
   sensitive   = true
 }
+
+variable "run_migrations" {
+  description = "Controla se o Terraform deve executar os scripts DDL/DML via provisioner local-exec (use somente quando o runner tiver acesso à VPC)."
+  type        = bool
+  default     = false
+}

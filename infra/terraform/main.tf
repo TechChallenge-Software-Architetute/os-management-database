@@ -3,7 +3,7 @@
 ############################################
 
 resource "aws_db_subnet_group" "aurora_subnets" {
-  name       = "aurora-workshop-subnet-group-2"
+  name       = "aurora-workshop-subnet-group-3"
   subnet_ids = var.subnet_ids
 
   tags = {
@@ -16,7 +16,7 @@ resource "aws_db_subnet_group" "aurora_subnets" {
 ############################################
 
 resource "aws_security_group" "aurora_sg" {
-  name        = "aurora-security-group-2"
+  name        = "aurora-security-group-3"
   description = "Acesso ao Aurora MySQL"
   vpc_id      = var.vpc_id
 
@@ -71,6 +71,7 @@ resource "aws_rds_cluster_instance" "aurora_instance" {
 ############################################
 
 resource "null_resource" "run_ddl" {
+  count = var.run_migrations ? 1 : 0
   depends_on = [
     aws_rds_cluster_instance.aurora_instance
   ]
@@ -91,6 +92,7 @@ EOT
 ############################################
 
 resource "null_resource" "run_dml" {
+  count = var.run_migrations ? 1 : 0
   depends_on = [
     null_resource.run_ddl
   ]
