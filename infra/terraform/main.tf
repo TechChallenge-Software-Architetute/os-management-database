@@ -40,7 +40,7 @@ resource "aws_security_group" "aurora_sg" {
 ############################################
 
 resource "aws_rds_cluster" "aurora" {
-  cluster_identifier = "meu-aurora-mysql"
+  cluster_identifier = "workshop"
   engine             = "aurora-mysql"
   engine_version     = "5.7.mysql_aurora.2.11.2"
 
