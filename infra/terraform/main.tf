@@ -3,7 +3,7 @@
 ############################################
 
 resource "aws_db_subnet_group" "aurora_subnets" {
-  name       = "aurora-workshop-subnet-group-3"
+  name       = "aurora-workshop-subnet-group"
   subnet_ids = var.subnet_ids
 
   tags = {
@@ -16,7 +16,7 @@ resource "aws_db_subnet_group" "aurora_subnets" {
 ############################################
 
 resource "aws_security_group" "aurora_sg" {
-  name        = "aurora-security-group-3"
+  name        = "aurora-security-group"
   description = "Acesso ao Aurora MySQL"
   vpc_id      = var.vpc_id
 
