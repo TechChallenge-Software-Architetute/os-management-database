@@ -60,7 +60,7 @@ resource "aws_rds_cluster" "aurora" {
 ############################################
 
 resource "aws_rds_cluster_instance" "aurora_instance" {
-  identifier         = "aurora-instance-1"
+  identifier         = "workshop-aurora-instance-1"
   cluster_identifier = aws_rds_cluster.aurora.id
   instance_class     = "db.t3.medium"
   engine             = aws_rds_cluster.aurora.engine
