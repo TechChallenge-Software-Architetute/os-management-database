@@ -80,7 +80,7 @@ resource "null_resource" "run_ddl" {
 mysql -h ${aws_rds_cluster.aurora.endpoint} \
       -u ${var.db_username} \
       -p${var.db_password} \
-      < ../scripts/ddl.sql
+      < ../../scripts/ddl.sql
 EOT
   }
 }
@@ -100,7 +100,7 @@ resource "null_resource" "run_dml" {
 mysql -h ${aws_rds_cluster.aurora.endpoint} \
       -u ${var.db_username} \
       -p${var.db_password} \
-      < ../scripts/dml.sql
+      < ../../scripts/dml.sql
 EOT
   }
 }
