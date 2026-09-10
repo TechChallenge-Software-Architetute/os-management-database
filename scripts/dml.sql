@@ -1,10 +1,23 @@
 -- DML: inserts e seeds idempotentes
 
 -- roles + admin user
-INSERT INTO roles (id, name) VALUES
-  (uuid_generate_v4(), 'ROLE_ADMIN'),
-  (uuid_generate_v4(), 'ROLE_USER'),
-  (uuid_generate_v4(), 'ROLE_TECHNICIAN');
+INSERT INTO roles (id, name)
+SELECT uuid_generate_v4(), 'ROLE_ADMIN'
+WHERE NOT EXISTS (
+  SELECT 1 FROM roles WHERE name = 'ROLE_ADMIN'
+);
+
+INSERT INTO roles (id, name)
+SELECT uuid_generate_v4(), 'ROLE_USER'
+WHERE NOT EXISTS (
+  SELECT 1 FROM roles WHERE name = 'ROLE_USER'
+);
+
+INSERT INTO roles (id, name)
+SELECT uuid_generate_v4(), 'ROLE_TECHNICIAN'
+WHERE NOT EXISTS (
+  SELECT 1 FROM roles WHERE name = 'ROLE_TECHNICIAN'
+);
 
 -- superadmin user (bcrypt hash from seu script)
 INSERT INTO users (id, email, password)
@@ -78,8 +91,9 @@ INSERT INTO service_type (id, name, description) VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- service (status as jsonb)
-INSERT INTO service (service_type_name, id_os, service_status)
+INSERT INTO service (id, service_type_name, id_os, service_status)
 VALUES (
+  gen_random_uuid(),
   'TROCA_OLEO',
   'a46ac51b-5ca6-439b-ba52-a36bd52e8647',
   '[{"status":"TO_DO","changedAt":"2026-04-30T14:35:00"}]'::jsonb
