@@ -24,7 +24,7 @@ resource "aws_security_group" "aurora_sg" {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"] # ajuste conforme sua rede
+    cidr_blocks = ["0.0.0.0/0"] # ajuste conforme sua rede
   }
 
   egress {
@@ -56,7 +56,7 @@ resource "aws_db_instance" "postgres" {
   db_subnet_group_name   = aws_db_subnet_group.aurora_subnets.name
   vpc_security_group_ids = [aws_security_group.aurora_sg.id]
 
-  publicly_accessible     = false
+  publicly_accessible     = true
   backup_retention_period = 0
   skip_final_snapshot     = true
   deletion_protection     = false
