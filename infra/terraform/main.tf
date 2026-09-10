@@ -17,7 +17,7 @@ resource "aws_db_subnet_group" "aurora_subnets" {
 
 resource "aws_security_group" "aurora_sg" {
   name        = "aurora-security-group"
-  description = "Acesso ao Aurora MySQL"
+  description = "Acesso ao Aurora PostgreSQL"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -41,7 +41,7 @@ resource "aws_security_group" "aurora_sg" {
 
 resource "aws_rds_cluster" "aurora" {
   cluster_identifier = "workshop"
-  engine             = "aurora-mysql"
+  engine             = "aurora-postgresql"
   engine_version     = "15.4"
 
   master_username = var.db_username
@@ -77,8 +77,8 @@ resource "null_resource" "run_ddl" {
   ]
 
   provisioner "local-exec" {
-    command = <<EOT
-    PGPASSWORD='${var.db_password}' psql \
+    command = <<-EOT
+      PGPASSWORD='${var.db_password}' psql \
       -h ${aws_rds_cluster.aurora.endpoint} \
       -U ${var.db_username} \
       -d workshop \
@@ -99,7 +99,7 @@ resource "null_resource" "run_dml" {
   ]
 
   provisioner "local-exec" {
-    command = <<EOT
+    command = <<-EOT
     PGPASSWORD='${var.db_password}' psql \
       -h ${aws_rds_cluster.aurora.endpoint} \
       -U ${var.db_username} \

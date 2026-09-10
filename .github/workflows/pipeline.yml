@@ -27,7 +27,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7.0"
+          terraform_version: "1.10.0"
 
       - name: Terraform fmt & init (no backend)
         run: |
@@ -72,14 +72,63 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7.0"
+          terraform_version: "1.10.0"
 
       - name: Terraform Init
-        run: terraform init -input=false
+        run: terraform init -input=false -reconfigure \
+          -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+          -backend-config="key=os-management-database/terraform.tfstate" \
+          -backend-config="region=${{ env.AWS_REGION }}" \
+          -backend-config="use_lockfile=true"
+
+      - name: Import existing AWS resources when state is empty
+        shell: bash
+        run: |
+          import_if_missing() {
+            local address="$1"
+            local resource_id="$2"
+
+            if ! terraform state show "$address" >/dev/null 2>&1; then
+              terraform import -input=false "$address" "$resource_id"
+            fi
+          }
+
+          subnet_group_name="aurora-workshop-subnet-group"
+          subnet_group_exists=$(aws rds describe-db-subnet-groups \
+            --db-subnet-group-name "$subnet_group_name" \
+            --query 'DBSubnetGroups[0].DBSubnetGroupName' \
+            --output text 2>/dev/null || true)
+          if [ "$subnet_group_exists" != "None" ] && [ -n "$subnet_group_exists" ]; then
+            import_if_missing "aws_db_subnet_group.aurora_subnets" "$subnet_group_name"
+          fi
+
+          security_group_id=$(aws ec2 describe-security-groups \
+            --filters "Name=vpc-id,Values=${TF_VAR_vpc_id}" "Name=group-name,Values=aurora-security-group" \
+            --query 'SecurityGroups[0].GroupId' \
+            --output text 2>/dev/null || true)
+          if [ "$security_group_id" != "None" ] && [ -n "$security_group_id" ]; then
+            import_if_missing "aws_security_group.aurora_sg" "$security_group_id"
+          fi
+
+          cluster_exists=$(aws rds describe-db-clusters \
+            --db-cluster-identifier workshop \
+            --query 'DBClusters[0].DBClusterIdentifier' \
+            --output text 2>/dev/null || true)
+          if [ "$cluster_exists" != "None" ] && [ -n "$cluster_exists" ]; then
+            import_if_missing "aws_rds_cluster.aurora" "workshop"
+          fi
+
+          instance_exists=$(aws rds describe-db-instances \
+            --db-instance-identifier workshop-aurora-instance-1 \
+            --query 'DBInstances[0].DBInstanceIdentifier' \
+            --output text 2>/dev/null || true)
+          if [ "$instance_exists" != "None" ] && [ -n "$instance_exists" ]; then
+            import_if_missing "aws_rds_cluster_instance.aurora_instance" "workshop-aurora-instance-1"
+          fi
 
       - name: Terraform Plan (save tfplan)
         run: |
-          terraform plan -input=false -no-color -out=tfplan -refresh=false
+          terraform plan -input=false -no-color -out=tfplan
 
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
