@@ -147,4 +147,12 @@ jobs:
           path: infra/terraform/tfplan
 
       - name: Terraform Apply
-        run: terraform apply -input=false -auto-approve tfplan
+        shell: bash
+        run: |
+          # O plano salvo já contém os valores das variáveis.
+          unset TF_VAR_vpc_id
+          unset TF_VAR_subnet_ids
+          unset TF_VAR_db_username
+          unset TF_VAR_db_password
+
+          terraform apply -input=false -auto-approve tfplan
