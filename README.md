@@ -11,3 +11,7 @@ Antes do primeiro deploy:
 3. Garanta que as credenciais da AWS tenham permissão para acessar o bucket e criar ou atualizar os recursos RDS e EC2.
 
 Recursos criados por execuções anteriores são importados automaticamente quando existem na AWS, mas ainda não estão registrados no estado remoto do Terraform.
+
+## Credenciais do banco
+
+Configure os secrets `DB_USERNAME` e `DB_PASSWORD` no GitHub Actions. O usuário não pode ser `postgres`, pois esse nome é reservado pelo RDS PostgreSQL. Use, por exemplo, `dbadmin`.

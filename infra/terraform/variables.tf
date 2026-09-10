@@ -13,11 +13,16 @@ variable "subnet_ids" {
 }
 
 variable "db_username" {
-  description = "Usuário master do Aurora"
+  description = "Usuário master do PostgreSQL RDS"
+
+  validation {
+    condition     = lower(var.db_username) != "postgres"
+    error_message = "DB_USERNAME não pode ser postgres, pois esse nome é reservado pelo PostgreSQL RDS."
+  }
 }
 
 variable "db_password" {
-  description = "Senha master do Aurora"
+  description = "Senha master do PostgreSQL RDS"
   sensitive   = true
 }
 
