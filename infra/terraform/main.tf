@@ -69,6 +69,11 @@ resource "aws_db_instance" "postgres" {
 
 resource "null_resource" "run_ddl" {
   count = var.run_migrations ? 1 : 0
+
+  triggers = {
+    script_hash = filesha256("../../scripts/ddl.sql")
+  }
+
   depends_on = [
     aws_db_instance.postgres
   ]
@@ -76,6 +81,7 @@ resource "null_resource" "run_ddl" {
   provisioner "local-exec" {
     command = <<-EOT
       PGPASSWORD='${var.db_password}' psql \
+      -v ON_ERROR_STOP=1 \
       -h ${aws_db_instance.postgres.address} \
       -U ${var.db_username} \
       -d workshop \
@@ -91,6 +97,11 @@ resource "null_resource" "run_ddl" {
 
 resource "null_resource" "run_dml" {
   count = var.run_migrations ? 1 : 0
+
+  triggers = {
+    script_hash = filesha256("../../scripts/dml.sql")
+  }
+
   depends_on = [
     null_resource.run_ddl
   ]
@@ -98,6 +109,7 @@ resource "null_resource" "run_dml" {
   provisioner "local-exec" {
     command = <<-EOT
     PGPASSWORD='${var.db_password}' psql \
+      -v ON_ERROR_STOP=1 \
       -h ${aws_db_instance.postgres.address} \
       -U ${var.db_username} \
       -d workshop \
