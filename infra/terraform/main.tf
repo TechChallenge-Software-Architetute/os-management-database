@@ -21,8 +21,8 @@ resource "aws_security_group" "aurora_sg" {
   vpc_id      = var.vpc_id
 
   ingress {
-    from_port   = 3306
-    to_port     = 3306
+    from_port   = 5432
+    to_port     = 5432
     protocol    = "tcp"
     cidr_blocks = ["10.0.0.0/16"] # ajuste conforme sua rede
   }
@@ -42,11 +42,11 @@ resource "aws_security_group" "aurora_sg" {
 resource "aws_rds_cluster" "aurora" {
   cluster_identifier = "workshop"
   engine             = "aurora-mysql"
-  engine_version     = "5.7.mysql_aurora.2.11.2"
+  engine_version     = "15.4"
 
   master_username = var.db_username
   master_password = var.db_password
-  database_name   = "meubanco"
+  database_name   = "workshop"
 
   db_subnet_group_name   = aws_db_subnet_group.aurora_subnets.name
   vpc_security_group_ids = [aws_security_group.aurora_sg.id]
@@ -78,11 +78,12 @@ resource "null_resource" "run_ddl" {
 
   provisioner "local-exec" {
     command = <<EOT
-mysql -h ${aws_rds_cluster.aurora.endpoint} \
-      -u ${var.db_username} \
-      -p${var.db_password} \
-      < ../../scripts/ddl.sql
-EOT
+    PGPASSWORD='${var.db_password}' psql \
+      -h ${aws_rds_cluster.aurora.endpoint} \
+      -U ${var.db_username} \
+      -d workshop \
+      -f ../../scripts/ddl.sql
+    EOT
   }
 }
 
@@ -99,11 +100,12 @@ resource "null_resource" "run_dml" {
 
   provisioner "local-exec" {
     command = <<EOT
-mysql -h ${aws_rds_cluster.aurora.endpoint} \
-      -u ${var.db_username} \
-      -p${var.db_password} \
-      < ../../scripts/dml.sql
-EOT
+    PGPASSWORD='${var.db_password}' psql \
+      -h ${aws_rds_cluster.aurora.endpoint} \
+      -U ${var.db_username} \
+      -d workshop \
+      -f ../../scripts/dml.sql
+    EOT
   }
 }
 
