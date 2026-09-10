@@ -39,7 +39,7 @@ jobs:
           cat > ci-placeholder.auto.tfvars <<EOF
           vpc_id = "placeholder"
           subnet_ids = ["subnet-1","subnet-2"]
-          db_username = "admin"
+          db_username = "dbadmin"
           db_password = "placeholder"
           EOF
           terraform validate
