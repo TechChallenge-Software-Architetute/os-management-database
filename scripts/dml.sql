@@ -104,6 +104,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO service_order (
   id,
   service_type_name,
+  service_status,
   list_service,
   cpf_cnpj,
   placa,
@@ -113,6 +114,7 @@ INSERT INTO service_order (
 VALUES (
   'b46ac51b-5ca6-439b-ba52-a36bd52e8648',
   'TROCA_OLEO',
+  'RECEBIDA',
   '["TROCA_OLEO", "ALINHAMENTO"]'::jsonb,
   '529.982.247-25',
   'ABC-1234',

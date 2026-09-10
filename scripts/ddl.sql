@@ -110,6 +110,15 @@ CREATE TABLE IF NOT EXISTS service_order (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE service_order
+  ALTER COLUMN service_status SET DEFAULT 'RECEBIDA';
+
+ALTER TABLE service_order
+  ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE service_order
+  ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP;
+
 -- products / parts / supplies + sequence
 CREATE SEQUENCE IF NOT EXISTS product_seq START WITH 1 INCREMENT BY 50;
 
