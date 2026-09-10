@@ -4,8 +4,7 @@
 INSERT INTO roles (id, name) VALUES
   (uuid_generate_v4(), 'ROLE_ADMIN'),
   (uuid_generate_v4(), 'ROLE_USER'),
-  (uuid_generate_v4(), 'ROLE_TECHNICIAN')
-ON CONFLICT (name) DO NOTHING;
+  (uuid_generate_v4(), 'ROLE_TECHNICIAN');
 
 -- superadmin user (bcrypt hash from seu script)
 INSERT INTO users (id, email, password)
