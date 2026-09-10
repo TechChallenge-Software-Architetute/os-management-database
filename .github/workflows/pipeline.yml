@@ -58,6 +58,7 @@ jobs:
       TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
       TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
       AWS_REGION: "us-east-1"
+      TF_STATE_BUCKET: "tfstate-backend-fiap-soat-giovanni"
     steps:
       - uses: actions/checkout@v4
 
@@ -75,11 +76,20 @@ jobs:
           terraform_version: "1.10.0"
 
       - name: Terraform Init
-        run: terraform init -input=false -reconfigure \
-          -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
-          -backend-config="key=os-management-database/terraform.tfstate" \
-          -backend-config="region=${{ env.AWS_REGION }}" \
-          -backend-config="use_lockfile=true"
+        shell: bash
+        run: |
+          if [ -z "$TF_STATE_BUCKET" ]; then
+            echo "O segredo TF_STATE_BUCKET não está configurado."
+            exit 1
+          fi
+
+          terraform init \
+            -input=false \
+            -reconfigure \
+            -backend-config="bucket=$TF_STATE_BUCKET" \
+            -backend-config="key=os-management-database/terraform.tfstate" \
+            -backend-config="region=$AWS_REGION" \
+            -backend-config="use_lockfile=true"
 
       - name: Import existing AWS resources when state is empty
         shell: bash
