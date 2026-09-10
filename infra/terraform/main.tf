@@ -36,50 +36,48 @@ resource "aws_security_group" "aurora_sg" {
 }
 
 ############################################
-# Aurora Cluster
+# Instancia PostgreSQL RDS para o Free Tier
 ############################################
 
-resource "aws_rds_cluster" "aurora" {
-  cluster_identifier = "workshop"
-  engine             = "aurora-postgresql"
-  engine_version     = "15.4"
+resource "aws_db_instance" "postgres" {
+  identifier = "workshop"
 
-  master_username = var.db_username
-  master_password = var.db_password
-  database_name   = "workshop"
+  engine         = "postgres"
+  engine_version = "15.4"
+  instance_class = "db.t3.micro"
+
+  allocated_storage = 20
+  storage_type      = "gp3"
+
+  db_name  = "workshop"
+  username = var.db_username
+  password = var.db_password
+  port     = 5432
 
   db_subnet_group_name   = aws_db_subnet_group.aurora_subnets.name
   vpc_security_group_ids = [aws_security_group.aurora_sg.id]
 
-  backup_retention_period = 1
-  preferred_backup_window = "03:00-04:00"
+  publicly_accessible     = false
+  backup_retention_period = 0
+  skip_final_snapshot     = true
+  deletion_protection     = false
+  apply_immediately       = true
 }
 
 ############################################
-# Aurora Instance (Writer)
-############################################
-
-resource "aws_rds_cluster_instance" "aurora_instance" {
-  identifier         = "workshop-aurora-instance-1"
-  cluster_identifier = aws_rds_cluster.aurora.id
-  instance_class     = "db.t3.medium"
-  engine             = aws_rds_cluster.aurora.engine
-}
-
-############################################
-# Aurora DDL
+# PostgreSQL DDL
 ############################################
 
 resource "null_resource" "run_ddl" {
   count = var.run_migrations ? 1 : 0
   depends_on = [
-    aws_rds_cluster_instance.aurora_instance
+    aws_db_instance.postgres
   ]
 
   provisioner "local-exec" {
     command = <<-EOT
       PGPASSWORD='${var.db_password}' psql \
-      -h ${aws_rds_cluster.aurora.endpoint} \
+      -h ${aws_db_instance.postgres.address} \
       -U ${var.db_username} \
       -d workshop \
       -f ../../scripts/ddl.sql
@@ -89,7 +87,7 @@ resource "null_resource" "run_ddl" {
 
 
 ############################################
-# Aurora DML
+# PostgreSQL DML
 ############################################
 
 resource "null_resource" "run_dml" {
@@ -101,7 +99,7 @@ resource "null_resource" "run_dml" {
   provisioner "local-exec" {
     command = <<-EOT
     PGPASSWORD='${var.db_password}' psql \
-      -h ${aws_rds_cluster.aurora.endpoint} \
+      -h ${aws_db_instance.postgres.address} \
       -U ${var.db_username} \
       -d workshop \
       -f ../../scripts/dml.sql

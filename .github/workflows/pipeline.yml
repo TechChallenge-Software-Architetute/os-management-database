@@ -79,7 +79,7 @@ jobs:
         shell: bash
         run: |
           if [ -z "$TF_STATE_BUCKET" ]; then
-            echo "O segredo TF_STATE_BUCKET não está configurado."
+            echo "A variável TF_STATE_BUCKET não está configurada."
             exit 1
           fi
 
@@ -120,20 +120,12 @@ jobs:
             import_if_missing "aws_security_group.aurora_sg" "$security_group_id"
           fi
 
-          cluster_exists=$(aws rds describe-db-clusters \
-            --db-cluster-identifier workshop \
-            --query 'DBClusters[0].DBClusterIdentifier' \
-            --output text 2>/dev/null || true)
-          if [ "$cluster_exists" != "None" ] && [ -n "$cluster_exists" ]; then
-            import_if_missing "aws_rds_cluster.aurora" "workshop"
-          fi
-
           instance_exists=$(aws rds describe-db-instances \
-            --db-instance-identifier workshop-aurora-instance-1 \
+            --db-instance-identifier workshop \
             --query 'DBInstances[0].DBInstanceIdentifier' \
             --output text 2>/dev/null || true)
           if [ "$instance_exists" != "None" ] && [ -n "$instance_exists" ]; then
-            import_if_missing "aws_rds_cluster_instance.aurora_instance" "workshop-aurora-instance-1"
+            import_if_missing "aws_db_instance.postgres" "workshop"
           fi
 
       - name: Terraform Plan (save tfplan)

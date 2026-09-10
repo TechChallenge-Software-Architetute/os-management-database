@@ -1,5 +1,5 @@
 output "aurora_endpoint" {
-  value = aws_rds_cluster.aurora.endpoint
+  value = aws_db_instance.postgres.endpoint
 }
 
 output "aurora_port" {
@@ -11,6 +11,6 @@ output "aurora_database" {
 }
 
 output "aurora_jdbc_url" {
-  value = "jdbc:postgresql://${aws_rds_cluster.aurora.endpoint}:5432/workshop"
+  value     = "jdbc:postgresql://${aws_db_instance.postgres.address}:5432/workshop"
   sensitive = true
 }
