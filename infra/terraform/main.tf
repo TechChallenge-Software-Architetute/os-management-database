@@ -51,7 +51,7 @@ resource "aws_rds_cluster" "aurora" {
   db_subnet_group_name   = aws_db_subnet_group.aurora_subnets.name
   vpc_security_group_ids = [aws_security_group.aurora_sg.id]
 
-  backup_retention_period = 7
+  backup_retention_period = 1
   preferred_backup_window = "03:00-04:00"
 }
 
