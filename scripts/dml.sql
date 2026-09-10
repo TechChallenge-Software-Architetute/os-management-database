@@ -9,12 +9,19 @@ ON CONFLICT (name) DO NOTHING;
 
 -- superadmin user (bcrypt hash from seu script)
 INSERT INTO users (id, email, password)
-VALUES (
+SELECT
   uuid_generate_v4(),
   'superadmin@system.com',
   '$2a$12$RJVIgDQpKX6.CtZiY9BQB.RNqNiDU7Y0Y6AMMlLUrxyApokRvMVrC'
-) ON CONFLICT (email) DO UPDATE
-SET password = EXCLUDED.password;
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM users
+  WHERE email = 'superadmin@system.com'
+);
+
+UPDATE users
+SET password = '$2a$12$RJVIgDQpKX6.CtZiY9BQB.RNqNiDU7Y0Y6AMMlLUrxyApokRvMVrC'
+WHERE email = 'superadmin@system.com';
 
 -- associate superadmin to all roles (idempotent)
 INSERT INTO user_roles (user_id, role_id)

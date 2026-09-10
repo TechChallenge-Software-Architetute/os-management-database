@@ -15,6 +15,20 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL
 );
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'users'::regclass
+      AND contype = 'u'
+      AND conname = 'uk_users_email'
+  ) THEN
+    ALTER TABLE users
+      ADD CONSTRAINT uk_users_email UNIQUE (email);
+  END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS groups (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(100) NOT NULL UNIQUE
