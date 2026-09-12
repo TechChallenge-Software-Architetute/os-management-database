@@ -3,7 +3,7 @@ name: "Terraform Aurora Deployment"
 on:
   push:
     branches:
-      - develop
+      - main
   pull_request:
     branches:
       - develop
@@ -20,7 +20,11 @@ jobs:
     defaults:
       run:
         working-directory: infra/terraform
-    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'develop'
+    if: >
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.base.ref == 'develop') ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/develop')
     steps:
       - uses: actions/checkout@v4
 
@@ -45,13 +49,13 @@ jobs:
           terraform validate
 
   deploy:
-    name: "Terraform Deploy (push → develop)"
+    name: "Terraform Deploy (push → main)"
     needs: []
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: infra/terraform
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     env:
       TF_VAR_vpc_id: ${{ secrets.VPC_ID }}
       TF_VAR_subnet_ids: ${{ secrets.SUBNET_IDS }}   # deve ser '["subnet-1","subnet-2"]'
