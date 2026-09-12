@@ -49,7 +49,7 @@ jobs:
           terraform validate
 
   deploy:
-    name: "Terraform Deploy (push → main)"
+    name: "Terraform Deploy (main)"
     needs: []
     runs-on: ubuntu-latest
     defaults:
