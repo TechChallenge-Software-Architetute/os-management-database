@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - develop
   pull_request:
     branches:
       - develop
@@ -49,14 +50,14 @@ jobs:
           terraform validate
 
   deploy:
-    name: "Terraform Deploy (main)"
+    name: "Terraform Deploy (develop/main)"
     needs: []
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}
     defaults:
       run:
         working-directory: infra/terraform
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
     env:
       TF_VAR_vpc_id: ${{ secrets.VPC_ID }}
       TF_VAR_subnet_ids: ${{ secrets.SUBNET_IDS }}   # deve ser '["subnet-1","subnet-2"]'
