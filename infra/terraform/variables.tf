@@ -32,6 +32,16 @@ variable "db_username" {
   }
 }
 
+variable "db_name" {
+  description = "Nome do banco PostgreSQL por ambiente."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{0,62}$", var.db_name))
+    error_message = "db_name deve conter apenas letras minúsculas, números e hífens, começando por uma letra."
+  }
+}
+
 variable "db_password" {
   description = "Senha master do PostgreSQL RDS"
   sensitive   = true

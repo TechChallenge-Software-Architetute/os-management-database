@@ -7,10 +7,10 @@ output "aurora_port" {
 }
 
 output "aurora_database" {
-  value = "workshop"
+  value = var.db_name
 }
 
 output "aurora_jdbc_url" {
-  value     = "jdbc:postgresql://${aws_db_instance.postgres.address}:5432/workshop"
+  value     = "jdbc:postgresql://${aws_db_instance.postgres.address}:5432/${var.db_name}"
   sensitive = true
 }
