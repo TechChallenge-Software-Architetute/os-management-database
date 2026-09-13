@@ -63,6 +63,7 @@ jobs:
       TF_VAR_subnet_ids: ${{ github.ref_name == 'main' && secrets.SUBNET_IDS_MAIN || secrets.SUBNET_IDS_DEVELOP }} # deve ser '["subnet-1","subnet-2"]'
       TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
       TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+      TF_VAR_db_name: workshop-${{ github.ref_name }}
       # Org-level values, MAIN/DEVELOP-suffixed, selected by branch (main->MAIN, develop->DEVELOP).
       TF_VAR_aws_account_id: ${{ github.ref_name == 'main' && secrets.AWS_ACCOUNT_ID_MAIN || secrets.AWS_ACCOUNT_ID_DEVELOP }}
       TF_STATE_BUCKET: ${{ github.ref_name == 'main' && secrets.TF_STATE_BUCKET_MAIN || secrets.TF_STATE_BUCKET_DEVELOP }}
@@ -96,7 +97,7 @@ jobs:
             -input=false \
             -reconfigure \
             -backend-config="bucket=$TF_STATE_BUCKET" \
-            -backend-config="key=os-management-database/terraform.tfstate" \
+            -backend-config="key=os-management-database/${{ github.ref_name }}/terraform.tfstate" \
             -backend-config="region=$AWS_REGION" \
             -backend-config="use_lockfile=true"
 
@@ -112,7 +113,7 @@ jobs:
             fi
           }
 
-          subnet_group_name="aurora-workshop-subnet-group"
+          subnet_group_name="aurora-${TF_VAR_db_name}-subnet-group"
           subnet_group_exists=$(aws rds describe-db-subnet-groups \
             --db-subnet-group-name "$subnet_group_name" \
             --query 'DBSubnetGroups[0].DBSubnetGroupName' \
@@ -122,7 +123,7 @@ jobs:
           fi
 
           security_group_id=$(aws ec2 describe-security-groups \
-            --filters "Name=vpc-id,Values=${TF_VAR_vpc_id}" "Name=group-name,Values=aurora-security-group" \
+            --filters "Name=vpc-id,Values=${TF_VAR_vpc_id}" "Name=group-name,Values=aurora-${TF_VAR_db_name}-security-group" \
             --query 'SecurityGroups[0].GroupId' \
             --output text 2>/dev/null || true)
           if [ "$security_group_id" != "None" ] && [ -n "$security_group_id" ]; then
@@ -130,11 +131,11 @@ jobs:
           fi
 
           instance_exists=$(aws rds describe-db-instances \
-            --db-instance-identifier workshop \
+            --db-instance-identifier "${TF_VAR_db_name}" \
             --query 'DBInstances[0].DBInstanceIdentifier' \
             --output text 2>/dev/null || true)
           if [ "$instance_exists" != "None" ] && [ -n "$instance_exists" ]; then
-            import_if_missing "aws_db_instance.postgres" "workshop"
+            import_if_missing "aws_db_instance.postgres" "${TF_VAR_db_name}"
           fi
 
       - name: Terraform Plan (save tfplan)
