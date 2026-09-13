@@ -71,19 +71,28 @@ resource "null_resource" "create_database" {
     db_name = var.db_name
   }
 
-  depends_on = [
-    aws_db_instance.postgres
-  ]
+  depends_on = [aws_db_instance.postgres]
 
   provisioner "local-exec" {
     command = <<-EOT
-      PGPASSWORD='${var.db_password}' psql \
-      -v ON_ERROR_STOP=1 \
-      -h ${aws_db_instance.postgres.address} \
-      -U ${var.db_username} \
-      -d postgres \
-      -c "SELECT format('CREATE DATABASE %I', '${var.db_name}') WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${var.db_name}')\\gexec"
+      set -e
+      EXISTS=$(PGPASSWORD="${var.db_password}" psql \
+        -v ON_ERROR_STOP=1 \
+        -h "${aws_db_instance.postgres.address}" \
+        -U "${var.db_username}" \
+        -d postgres \
+        -tAc "SELECT 1 FROM pg_database WHERE datname='${var.db_name}'")
+
+      if [ "$EXISTS" != "1" ]; then
+        PGPASSWORD="${var.db_password}" psql \
+          -v ON_ERROR_STOP=1 \
+          -h "${aws_db_instance.postgres.address}" \
+          -U "${var.db_username}" \
+          -d postgres \
+          -c "CREATE DATABASE \"${var.db_name}\""
+      fi
     EOT
+    interpreter = ["/bin/bash", "-c"]
   }
 }
 
@@ -91,22 +100,21 @@ resource "null_resource" "run_ddl" {
   count = var.run_migrations ? 1 : 0
 
   triggers = {
-    script_hash = filesha256("../../scripts/ddl.sql")
+    script_hash = filesha256("${path.module}/../../scripts/ddl.sql")
   }
 
-  depends_on = [
-    null_resource.create_database
-  ]
+  depends_on = [null_resource.create_database]
 
   provisioner "local-exec" {
     command = <<-EOT
-      PGPASSWORD='${var.db_password}' psql \
-      -v ON_ERROR_STOP=1 \
-      -h ${aws_db_instance.postgres.address} \
-      -U ${var.db_username} \
-      -d ${var.db_name} \
-      -f ../../scripts/ddl.sql
+      PGPASSWORD="${var.db_password}" psql \
+        -v ON_ERROR_STOP=1 \
+        -h "${aws_db_instance.postgres.address}" \
+        -U "${var.db_username}" \
+        -d "${var.db_name}" \
+        -f "${path.module}/../../scripts/ddl.sql"
     EOT
+    interpreter = ["/bin/bash", "-c"]
   }
 }
 
@@ -119,7 +127,7 @@ resource "null_resource" "run_dml" {
   count = var.run_migrations ? 1 : 0
 
   triggers = {
-    script_hash = filesha256("../../scripts/dml.sql")
+    script_hash = filesha256("${path.module}/../../scripts/dml.sql")
   }
 
   depends_on = [
@@ -128,13 +136,15 @@ resource "null_resource" "run_dml" {
 
   provisioner "local-exec" {
     command = <<-EOT
-    PGPASSWORD='${var.db_password}' psql \
-      -v ON_ERROR_STOP=1 \
-      -h ${aws_db_instance.postgres.address} \
-      -U ${var.db_username} \
-      -d ${var.db_name} \
-      -f ../../scripts/dml.sql
+      set -e
+      PGPASSWORD="${var.db_password}" psql \
+        -v ON_ERROR_STOP=1 \
+        -h "${aws_db_instance.postgres.address}" \
+        -U "${var.db_username}" \
+        -d "${var.db_name}" \
+        -f "${path.module}/../../scripts/dml.sql"
     EOT
+    interpreter = ["/bin/bash", "-c"]
   }
 }
 
