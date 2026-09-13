@@ -3,7 +3,7 @@
 ############################################
 
 resource "aws_db_subnet_group" "aurora_subnets" {
-  name       = "aurora-workshop-subnet-group"
+  name       = "aurora-${var.db_name}-subnet-group"
   subnet_ids = var.subnet_ids
 
   tags = {
@@ -16,7 +16,7 @@ resource "aws_db_subnet_group" "aurora_subnets" {
 ############################################
 
 resource "aws_security_group" "aurora_sg" {
-  name        = "aurora-security-group"
+  name        = "aurora-${var.db_name}-security-group"
   description = "Acesso ao Aurora PostgreSQL"
   vpc_id      = var.vpc_id
 
@@ -40,7 +40,7 @@ resource "aws_security_group" "aurora_sg" {
 ############################################
 
 resource "aws_db_instance" "postgres" {
-  identifier = "workshop"
+  identifier = var.db_name
 
   engine         = "postgres"
   instance_class = "db.t3.micro"
@@ -48,7 +48,6 @@ resource "aws_db_instance" "postgres" {
   allocated_storage = 20
   storage_type      = "gp3"
 
-  db_name  = "workshop"
   username = var.db_username
   password = var.db_password
   port     = 5432
@@ -67,11 +66,9 @@ resource "aws_db_instance" "postgres" {
 # PostgreSQL DDL
 ############################################
 
-resource "null_resource" "run_ddl" {
-  count = var.run_migrations ? 1 : 0
-
+resource "null_resource" "create_database" {
   triggers = {
-    script_hash = filesha256("../../scripts/ddl.sql")
+    db_name = var.db_name
   }
 
   depends_on = [
@@ -84,7 +81,30 @@ resource "null_resource" "run_ddl" {
       -v ON_ERROR_STOP=1 \
       -h ${aws_db_instance.postgres.address} \
       -U ${var.db_username} \
-      -d workshop \
+      -d postgres \
+      -c "SELECT format('CREATE DATABASE %I', '${var.db_name}') WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${var.db_name}')\\gexec"
+    EOT
+  }
+}
+
+resource "null_resource" "run_ddl" {
+  count = var.run_migrations ? 1 : 0
+
+  triggers = {
+    script_hash = filesha256("../../scripts/ddl.sql")
+  }
+
+  depends_on = [
+    null_resource.create_database
+  ]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      PGPASSWORD='${var.db_password}' psql \
+      -v ON_ERROR_STOP=1 \
+      -h ${aws_db_instance.postgres.address} \
+      -U ${var.db_username} \
+      -d ${var.db_name} \
       -f ../../scripts/ddl.sql
     EOT
   }
@@ -112,7 +132,7 @@ resource "null_resource" "run_dml" {
       -v ON_ERROR_STOP=1 \
       -h ${aws_db_instance.postgres.address} \
       -U ${var.db_username} \
-      -d workshop \
+      -d ${var.db_name} \
       -f ../../scripts/dml.sql
     EOT
   }
