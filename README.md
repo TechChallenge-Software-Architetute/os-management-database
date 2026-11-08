@@ -316,3 +316,4 @@ os-management-k8s-terraform → os-management-database → os-management-lambda 
 
 - Lembrar de adicionar o usuário **`soat-architecture`** a este repositório
   (requisito de entrega do Tech Challenge).
+
